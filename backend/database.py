@@ -138,7 +138,7 @@ def update_player_role_aggregate(conn, player_id, role):
         """, (player_id, role, avg_score, total_matches))
     conn.commit()
 
-def get_player_aggregates(conn, player_id: int) -> dict:
+def get_player_aggregates(conn, player_id: int) -> list:
     with conn.cursor() as cur:
         cur.execute("""
             SELECT role, avg_score, total_matches, last_updated
@@ -149,7 +149,7 @@ def get_player_aggregates(conn, player_id: int) -> dict:
         return [
             {
                 "role": row[0],
-                "avg_score": row[1],
+                **({"avg_score": row[1]} if row[2] > 5 else {}),
                 "total_matches": row[2],
                 "last_updated": row[3]
             } for row in results

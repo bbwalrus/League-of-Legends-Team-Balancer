@@ -318,7 +318,7 @@ console.log('API URL:', API_URL);
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">League of Legends Team Balancer</h1>
-          <p className="text-blue-200">Add 10 players and balance them into fair teams</p>
+          <p className="text-blue-200">Add players and balance them based on their scores. You must have 5 games on a role to recieve a score. Update your dpm.lol profile for recent matches.</p>
         </div>
 
         {/* Compact Player Management */}
