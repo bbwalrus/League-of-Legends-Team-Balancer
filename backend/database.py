@@ -1,14 +1,29 @@
-import psycopg
+import psycopg2
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 
 def get_connection():
-    # Read the connection URL from environment variables
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    if not DATABASE_URL:
-        raise ValueError("DATABASE_URL environment variable not set")
-
-    # Connect using the full connection URL
-    return psycopg.connect(DATABASE_URL, autocommit=True)
+    """
+    Creates and returns a psycopg2 connection to the database
+    using credentials from environment variables.
+    """
+    try:
+        connection = psycopg2.connect(
+            user=os.getenv("user"),
+            password=os.getenv("password"),
+            host=os.getenv("host"),
+            port=os.getenv("port"),
+            dbname=os.getenv("dbname")
+        )
+        print("Database connection established.")
+        return connection
+    except Exception as e:
+        print(f"Failed to connect to the database: {e}")
+        return None
 
 def create_tables():
     with get_connection() as conn:
@@ -139,6 +154,3 @@ def get_player_aggregates(conn, player_id: int) -> dict:
                 "last_updated": row[3]
             } for row in results
         ]
-
-if __name__ == "__main__":
-    create_tables()
