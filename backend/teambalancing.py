@@ -1,5 +1,7 @@
 from itertools import combinations
 
+from itertools import combinations
+
 def balance_teams_by_role(players):
     n = len(players)
     if n % 2 != 0:
@@ -10,28 +12,34 @@ def balance_teams_by_role(players):
     best_diff = float('inf')
     best_team_a = None
 
+    penalty_weight = 10  # Adjust this to control how strongly to discourage zero scores
+
+    def sum_scores(team):
+        sums = {role: 0 for role in roles}
+        zero_score_count = 0
+        for p in team:
+            for r in roles:
+                score = p["scores_by_role"].get(r)
+                if score is None:
+                    score = 0
+                sums[r] += score
+                if score == 0:
+                    zero_score_count += 1
+        return sums, zero_score_count
+
     # Generate all combinations of half the players for team_a
-    # This is only feasible for small n (e.g., 10 players: C(10,5) = 252)
     for team_a_indices in combinations(range(n), half):
         team_a = [players[i] for i in team_a_indices]
         team_b = [players[i] for i in range(n) if i not in team_a_indices]
 
-        # Sum scores by role for each team
-        def sum_scores(team):
-            sums = {role: 0 for role in roles}
-            for p in team:
-                for r in roles:
-                    score = p["scores_by_role"].get(r)
-                    if score is None:
-                        score = 0
-                    sums[r] += score
-            return sums
-
-        sums_a = sum_scores(team_a)
-        sums_b = sum_scores(team_b)
+        sums_a, zero_a = sum_scores(team_a)
+        sums_b, zero_b = sum_scores(team_b)
 
         # Calculate total absolute difference across roles
         diff = sum(abs(sums_a[r] - sums_b[r]) for r in roles)
+
+        # Add penalty for zero scores in both teams
+        diff += penalty_weight * (zero_a + zero_b)
 
         if diff < best_diff:
             best_diff = diff
@@ -40,7 +48,6 @@ def balance_teams_by_role(players):
             if best_diff == 0:
                 break  # perfect balance
 
-    # Return player_id lists for each team
     return (
         [p["player_id"] for p in best_team_a],
         [p["player_id"] for p in best_team_b]
