@@ -7,6 +7,9 @@ const LoLTeamBalancer = () => {
   const [teams, setTeams] = useState({ team1: [], team2: [] });
   const [isBalancing, setIsBalancing] = useState(false);
   const [expandedPlayer, setExpandedPlayer] = useState(null);
+  const [expandedPlayerList, setExpandedPlayerList] = useState(false);
+  const [expandedTeam1, setExpandedTeam1] = useState(false);
+  const [expandedTeam2, setExpandedTeam2] = useState(false);
   const [isLoadingPlayer, setIsLoadingPlayer] = useState(false);
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -226,15 +229,9 @@ console.log('API URL:', API_URL);
   };
 
 
-  const PlayerCard = ({ player, index, showRemove = true }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-    
+  const PlayerCard = ({ player, index, showRemove = true, isExpanded = false }) => {
     return (
-      <div 
-        className="bg-white rounded-lg shadow-md border border-gray-200 p-3 transition-all duration-500 ease-in-out"
-        onMouseEnter={() => setIsExpanded(true)}
-        onMouseLeave={() => setIsExpanded(false)}
-      >
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 transition-all duration-500 ease-in-out">
         <div className="flex justify-between items-start">
           <div className="min-w-0 flex-1">
             <h3 className="font-bold text-gray-900 text-sm truncate">{player.username}</h3>
@@ -284,7 +281,7 @@ console.log('API URL:', API_URL);
     );
   };
 
-  const TeamDisplay = ({ team, teamName, color }) => (
+  const TeamDisplay = ({ team, teamName, color, isExpanded, setExpanded }) => (
     <div className="mb-8">
       <div className={`bg-white rounded-lg shadow-lg border-t-4 ${color}`}>
         <div className="p-4 border-b border-gray-200">
@@ -302,10 +299,20 @@ console.log('API URL:', API_URL);
             </div>
           </div>
         </div>
-        <div className="p-4">
+        <div 
+          className="p-4"
+          onMouseEnter={() => setExpanded(true)}
+          onMouseLeave={() => setExpanded(false)}
+        >
           <div className="grid grid-cols-5 gap-3">
             {team.map((player, index) => (
-              <PlayerCard key={`${player.username}-${player.tag}`} player={player} index={index} showRemove={false} />
+              <PlayerCard 
+                key={`${player.username}-${player.tag}`} 
+                player={player} 
+                index={index} 
+                showRemove={false} 
+                isExpanded={isExpanded}
+              />
             ))}
           </div>
         </div>
@@ -399,13 +406,15 @@ console.log('API URL:', API_URL);
           </div>
           
           {players.length > 0 && (
-            <div className="grid grid-cols-10 gap-1 mt-3">
+            <div 
+              className="grid grid-cols-10 gap-1 mt-3"
+              onMouseEnter={() => setExpandedPlayerList(true)}
+              onMouseLeave={() => setExpandedPlayerList(false)}
+            >
               {players.map((player, index) => (
                 <div
                   key={index}
                   className="bg-white rounded border border-gray-200 p-1 transition-all duration-500 ease-in-out hover:shadow-md text-center"
-                  onMouseEnter={() => setExpandedPlayer(index)}
-                  onMouseLeave={() => setExpandedPlayer(null)}
                 >
                   <div className="mb-1">
                     <div className="font-bold text-xs text-gray-900 truncate" title={player.username}>
@@ -428,7 +437,7 @@ console.log('API URL:', API_URL);
 
                   {/* Expanded role scores on hover */}
                   <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                    expandedPlayer === index ? 'max-h-24 opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'
+                    expandedPlayerList ? 'max-h-24 opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'
                   }`}>
                     <div className="pt-1 border-t border-gray-200">
                       <div className="space-y-0.5">
@@ -454,8 +463,20 @@ console.log('API URL:', API_URL);
         {/* Balanced Teams */}
         {(teams.team1.length > 0 || teams.team2.length > 0) && (
           <div>
-            <TeamDisplay team={teams.team1} teamName="Blue Team" color="border-blue-500" />
-            <TeamDisplay team={teams.team2} teamName="Red Team" color="border-red-500" />
+            <TeamDisplay 
+              team={teams.team1} 
+              teamName="Blue Team" 
+              color="border-blue-500" 
+              isExpanded={expandedTeam1}
+              setExpanded={setExpandedTeam1}
+            />
+            <TeamDisplay 
+              team={teams.team2} 
+              teamName="Red Team" 
+              color="border-red-500" 
+              isExpanded={expandedTeam2}
+              setExpanded={setExpandedTeam2}
+            />
           </div>
         )}
       </div>

@@ -149,7 +149,7 @@ def get_player_aggregates(conn, player_id: int) -> list:
         return [
             {
                 "role": row[0],
-                **({"avg_score": row[1]} if row[2] > 5 else {}),
+                **({"avg_score": row[1]} if row[2] > 2 else {}),
                 "total_matches": row[2],
                 "last_updated": row[3]
             } for row in results

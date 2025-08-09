@@ -1,7 +1,5 @@
 from itertools import combinations
 
-from itertools import combinations
-
 def balance_teams_by_role(players):
     n = len(players)
     if n % 2 != 0:
@@ -9,44 +7,43 @@ def balance_teams_by_role(players):
 
     roles = list(players[0]["scores_by_role"].keys())
     half = n // 2
-    best_diff = float('inf')
+    best_score = float('inf')
     best_team_a = None
-
-    penalty_weight = 10  # Adjust this to control how strongly to discourage zero scores
+    penalty_weight = 20  # tune for discouraging unbalanced advantages
 
     def sum_scores(team):
         sums = {role: 0 for role in roles}
-        zero_score_count = 0
         for p in team:
             for r in roles:
-                score = p["scores_by_role"].get(r)
-                if score is None:
-                    score = 0
+                score = p["scores_by_role"].get(r) or 0
                 sums[r] += score
-                if score == 0:
-                    zero_score_count += 1
-        return sums, zero_score_count
+        return sums
 
-    # Generate all combinations of half the players for team_a
     for team_a_indices in combinations(range(n), half):
         team_a = [players[i] for i in team_a_indices]
         team_b = [players[i] for i in range(n) if i not in team_a_indices]
 
-        sums_a, zero_a = sum_scores(team_a)
-        sums_b, zero_b = sum_scores(team_b)
+        sums_a = sum_scores(team_a)
+        sums_b = sum_scores(team_b)
 
-        # Calculate total absolute difference across roles
-        diff = sum(abs(sums_a[r] - sums_b[r]) for r in roles)
+        role_diffs = {r: sums_a[r] - sums_b[r] for r in roles}
+        abs_diff_sum = sum(abs(v) for v in role_diffs.values())
 
-        # Add penalty for zero scores in both teams
-        diff += penalty_weight * (zero_a + zero_b)
+        # Count how many roles Team A and Team B "win"
+        a_wins = sum(1 for v in role_diffs.values() if v > 0)
+        b_wins = sum(1 for v in role_diffs.values() if v < 0)
 
-        if diff < best_diff:
-            best_diff = diff
+        # Penalize imbalance in advantage counts
+        advantage_imbalance = abs(a_wins - b_wins) * penalty_weight
+
+        total_score = abs_diff_sum + advantage_imbalance
+
+        if total_score < best_score:
+            best_score = total_score
             best_team_a = team_a
             best_team_b = team_b
-            if best_diff == 0:
-                break  # perfect balance
+            if best_score == 0:
+                break
 
     return (
         [p["player_id"] for p in best_team_a],
