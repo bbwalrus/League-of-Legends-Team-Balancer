@@ -30,8 +30,8 @@ https://league-of-legends-team-balancer.vercel.app/
 
 ## Architecture Overview
 
-* **Frontend:** React with state management and UI components for player input and team display.
-* **Backend:** FastAPI service handling data fetching, skill calculation, and team balancing algorithms.
-* **Data Storage:** Uses a postgres database for storing and caching player stats
+* **Frontend:** React with state management and UI components for player input and team display hosted on Vercel.
+* **Backend:** FastAPI service handling data fetching, skill calculation, and team balancing algorithms hosted on an AWS EC2 instance.
+* **Data Storage:** Uses a PostgreSQL database in Supabase for storing and caching player stats.
 
 If you want me to customize it with details like your tech stack, API usage, or instructions specific to your project, just let me know!
