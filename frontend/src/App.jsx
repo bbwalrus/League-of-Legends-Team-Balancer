@@ -6,8 +6,7 @@ const LoLTeamBalancer = () => {
   const [newPlayer, setNewPlayer] = useState({ username: '', tag: '' });
   const [teams, setTeams] = useState({ team1: [], team2: [] });
   const [isBalancing, setIsBalancing] = useState(false);
-  const [expandedPlayer, setExpandedPlayer] = useState(null);
-  const [expandedPlayerList, setExpandedPlayerList] = useState(false);
+  const [expandedAddingArea, setExpandedAddingArea] = useState(false);
   const [expandedTeam1, setExpandedTeam1] = useState(false);
   const [expandedTeam2, setExpandedTeam2] = useState(false);
   const [isLoadingPlayer, setIsLoadingPlayer] = useState(false);
@@ -61,7 +60,6 @@ console.log('API URL:', API_URL);
 
     return count === 0 ? 0 : Math.round(totalScores / count);
   };
-
 
   // Helper function to calculate team overall average (average of each player's overall average)
   const calculateTeamOverallAverage = (team) => {
@@ -228,60 +226,7 @@ console.log('API URL:', API_URL);
     }
   };
 
-
-  const PlayerCard = ({ player, index, showRemove = true, isExpanded = false }) => {
-    return (
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 transition-all duration-500 ease-in-out">
-        <div className="flex justify-between items-start">
-          <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-gray-900 text-sm truncate">{player.username}</h3>
-            <p className="text-xs text-gray-600">#{player.tag}</p>
-            {player.role && (
-              <div className="mt-2">
-                <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${roleColors[player.role]}`}>
-                  {player.role}
-                </span>
-                <span className="ml-2 font-bold text-lg text-gray-900">
-                  {displayScore(player.roleScores?.[player.role])}
-                </span>
-              </div>
-            )}
-          </div>
-          {showRemove && (
-            <button
-              onClick={() => removePlayer(index)}
-              className="text-red-500 hover:text-red-700 p-1 ml-2"
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
-        </div>
-
-        {/* Expanded role scores with smooth height transition */}
-        <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isExpanded ? 'max-h-32 opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'
-        }`}>
-          <div className="pt-3 border-t border-gray-200">
-            <div className="text-xs font-medium text-gray-700 mb-2">All Role Scores</div>
-            <div className="grid grid-cols-5 gap-1">
-              {roles.map(role => (
-                <div key={role} className="text-center">
-                  <div className={`text-xs px-1 py-1 rounded ${roleColors[role]} mb-1`}>
-                    {role === 'Middle' ? 'Mid' : role === 'Bottom' ? 'Bot' : role === 'Utility' ? 'Sup' : role.slice(0, 3)}
-                  </div>
-                  <div className="text-xs font-medium">
-                    {displayScore(player.roleScores?.[role])}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const TeamDisplay = ({ team, teamName, color, isExpanded, setExpanded }) => (
+  const TeamDisplay = ({ team, teamName, color, isExpanded = false, onHover, onLeave }) => (
     <div className="mb-8">
       <div className={`bg-white rounded-lg shadow-lg border-t-4 ${color}`}>
         <div className="p-4 border-b border-gray-200">
@@ -299,20 +244,66 @@ console.log('API URL:', API_URL);
             </div>
           </div>
         </div>
-        <div 
-          className="p-4"
-          onMouseEnter={() => setExpanded(true)}
-          onMouseLeave={() => setExpanded(false)}
-        >
-          <div className="grid grid-cols-5 gap-3">
+        <div className="p-4">
+          <div 
+            className="grid grid-cols-5 gap-3"
+            onMouseEnter={onHover}
+            onMouseLeave={onLeave}
+          >
             {team.map((player, index) => (
-              <PlayerCard 
-                key={`${player.username}-${player.tag}`} 
-                player={player} 
-                index={index} 
-                showRemove={false} 
-                isExpanded={isExpanded}
-              />
+              <div
+                key={`${player.username}-${player.tag}`}
+                className="bg-white rounded border border-gray-200 p-2 transition-all duration-500 ease-in-out hover:shadow-md"
+              >
+                {/* Top section with user/tag on left, role/score on right */}
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-xs text-gray-900 truncate" title={player.username}>
+                      {player.username.length > 8 ? player.username.slice(0, 8) + '...' : player.username}
+                    </div>
+                    <div className="text-xs text-gray-600">#{player.tag}</div>
+                  </div>
+                  {player.role && (
+                    <div className="flex flex-col items-end ml-2">
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${roleColors[player.role]}`}>
+                        {player.role}
+                      </span>
+                      <div className="text-sm font-bold text-blue-600 mt-0.5">
+                        {displayScore(player.roleScores?.[player.role])}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Expanded role scores on hover */}
+                <div 
+                  className="transition-all duration-500 ease-in-out overflow-hidden"
+                  style={{
+                    maxHeight: isExpanded ? '60px' : '0px',
+                    opacity: isExpanded ? 1 : 0,
+                    marginTop: isExpanded ? '8px' : '0px'
+                  }}
+                >
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="text-center">
+                      <div className="grid grid-cols-5 gap-1 text-xs mb-1">
+                        {roles.map(role => (
+                          <div key={role} className="truncate">
+                            {role === 'Utility' ? 'Support' : role}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-5 gap-1 text-xs font-bold">
+                        {roles.map(role => (
+                          <div key={role}>
+                            {displayScore(player.roleScores?.[role])}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -408,8 +399,8 @@ console.log('API URL:', API_URL);
           {players.length > 0 && (
             <div 
               className="grid grid-cols-10 gap-1 mt-3"
-              onMouseEnter={() => setExpandedPlayerList(true)}
-              onMouseLeave={() => setExpandedPlayerList(false)}
+              onMouseEnter={() => setExpandedAddingArea(true)}
+              onMouseLeave={() => setExpandedAddingArea(false)}
             >
               {players.map((player, index) => (
                 <div
@@ -436,9 +427,14 @@ console.log('API URL:', API_URL);
                   </div>
 
                   {/* Expanded role scores on hover */}
-                  <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                    expandedPlayerList ? 'max-h-24 opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'
-                  }`}>
+                  <div 
+                    className="transition-all duration-500 ease-in-out overflow-hidden"
+                    style={{
+                      maxHeight: expandedAddingArea ? '96px' : '0px',
+                      opacity: expandedAddingArea ? 1 : 0,
+                      marginTop: expandedAddingArea ? '4px' : '0px'
+                    }}
+                  >
                     <div className="pt-1 border-t border-gray-200">
                       <div className="space-y-0.5">
                         {roles.map(role => (
@@ -463,20 +459,169 @@ console.log('API URL:', API_URL);
         {/* Balanced Teams */}
         {(teams.team1.length > 0 || teams.team2.length > 0) && (
           <div>
-            <TeamDisplay 
-              team={teams.team1} 
-              teamName="Blue Team" 
-              color="border-blue-500" 
-              isExpanded={expandedTeam1}
-              setExpanded={setExpandedTeam1}
-            />
-            <TeamDisplay 
-              team={teams.team2} 
-              teamName="Red Team" 
-              color="border-red-500" 
-              isExpanded={expandedTeam2}
-              setExpanded={setExpandedTeam2}
-            />
+            {/* Blue Team */}
+            <div className="mb-8">
+              <div className="bg-white rounded-lg shadow-lg border-t-4 border-blue-500">
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-gray-900">Blue Team</h2>
+                    <div className="text-right">
+                      <div className="mb-2">
+                        <div className="text-sm text-gray-600">Team Role Average</div>
+                        <div className="text-xl font-bold text-gray-900">{calculateTeamRoleAverage(teams.team1)}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Team Overall Average</div>
+                        <div className="text-xl font-bold text-blue-600">{calculateTeamOverallAverage(teams.team1)}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div 
+                    className="grid grid-cols-5 gap-3"
+                    onMouseEnter={() => setExpandedTeam1(true)}
+                    onMouseLeave={() => setExpandedTeam1(false)}
+                  >
+                    {teams.team1.map((player, index) => (
+                      <div
+                        key={`${player.username}-${player.tag}`}
+                        className="bg-white rounded border border-gray-200 p-2 transition-all duration-500 ease-in-out hover:shadow-md"
+                      >
+                        {/* Player info section */}
+                        <div className="mb-1">
+                          <div className="font-bold text-sm text-gray-900 truncate" title={player.username}>
+                            {player.username.length > 8 ? player.username.slice(0, 8) + '...' : player.username}
+                          </div>
+                          <div className="text-xs text-gray-600">#{player.tag}</div>
+                          {player.role && (
+                            <div className="mt-1 flex items-center">
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${roleColors[player.role]}`}>
+                                {player.role}
+                              </span>
+                              <span className="ml-2 font-bold text-lg text-gray-900">
+                                {displayScore(player.roleScores?.[player.role])}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Expanded role scores on hover */}
+                        <div 
+                          className="transition-all duration-500 ease-in-out overflow-hidden"
+                          style={{
+                            maxHeight: expandedTeam1 ? '60px' : '0px',
+                            opacity: expandedTeam1 ? 1 : 0,
+                            marginTop: expandedTeam1 ? '8px' : '0px'
+                          }}
+                        >
+                          <div className="pt-2 border-t border-gray-200">
+                            <div className="text-center">
+                              <div className="grid grid-cols-5 gap-1 text-xs mb-1">
+                                {roles.map(role => (
+                                  <div key={role} className={`px-1 py-1 rounded text-xs ${roleColors[role]} truncate`}>
+                                    {role === 'Utility' ? 'Sup' : role === 'Middle' ? 'Mid' : role === 'Bottom' ? 'Bot' : role === 'Jungle' ? 'Jng' : role}
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="grid grid-cols-5 gap-1 text-xs font-bold">
+                                {roles.map(role => (
+                                  <div key={role}>
+                                    {displayScore(player.roleScores?.[role])}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Red Team */}
+            <div className="mb-8">
+              <div className="bg-white rounded-lg shadow-lg border-t-4 border-red-500">
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-gray-900">Red Team</h2>
+                    <div className="text-right">
+                      <div className="mb-2">
+                        <div className="text-sm text-gray-600">Team Role Average</div>
+                        <div className="text-xl font-bold text-gray-900">{calculateTeamRoleAverage(teams.team2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Team Overall Average</div>
+                        <div className="text-xl font-bold text-blue-600">{calculateTeamOverallAverage(teams.team2)}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div 
+                    className="grid grid-cols-5 gap-3"
+                    onMouseEnter={() => setExpandedTeam2(true)}
+                    onMouseLeave={() => setExpandedTeam2(false)}
+                  >
+                    {teams.team2.map((player, index) => (
+                      <div
+                        key={`${player.username}-${player.tag}`}
+                        className="bg-white rounded border border-gray-200 p-2 transition-all duration-500 ease-in-out hover:shadow-md"
+                      >
+                        {/* Player info section */}
+                        <div className="mb-1">
+                          <div className="font-bold text-sm text-gray-900 truncate" title={player.username}>
+                            {player.username.length > 8 ? player.username.slice(0, 8) + '...' : player.username}
+                          </div>
+                          <div className="text-xs text-gray-600">#{player.tag}</div>
+                          {player.role && (
+                            <div className="mt-1 flex items-center">
+                              <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${roleColors[player.role]}`}>
+                                {player.role}
+                              </span>
+                              <span className="ml-2 font-bold text-lg text-gray-900">
+                                {displayScore(player.roleScores?.[player.role])}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Expanded role scores on hover */}
+                        <div 
+                          className="transition-all duration-500 ease-in-out overflow-hidden"
+                          style={{
+                            maxHeight: expandedTeam2 ? '60px' : '0px',
+                            opacity: expandedTeam2 ? 1 : 0,
+                            marginTop: expandedTeam2 ? '8px' : '0px'
+                          }}
+                        >
+                          <div className="pt-2 border-t border-gray-200">
+                            <div className="text-center">
+                              <div className="grid grid-cols-5 gap-1 text-xs mb-1">
+                                {roles.map(role => (
+                                  <div key={role} className={`px-1 py-1 rounded text-xs ${roleColors[role]} truncate`}>
+                                    {role === 'Utility' ? 'Sup' : role === 'Middle' ? 'Mid' : role === 'Bottom' ? 'Bot' : role === 'Jungle' ? 'Jng' : role}
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="grid grid-cols-5 gap-1 text-xs font-bold">
+                                {roles.map(role => (
+                                  <div key={role}>
+                                    {displayScore(player.roleScores?.[role])}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
